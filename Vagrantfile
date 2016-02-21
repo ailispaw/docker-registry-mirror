@@ -32,6 +32,7 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.provision "registry", type: "docker" do |docker|
+    docker.pull_images "registry:2"
     docker.run "registry",
       image: "registry:2",
       args: [
@@ -51,6 +52,7 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.provision "frontend", type: "docker" do |docker|
+    docker.pull_images "konradkleine/docker-registry-frontend:v2"
     docker.run "frontend",
       image: "konradkleine/docker-registry-frontend:v2",
       args: [
