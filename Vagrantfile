@@ -56,7 +56,9 @@ Vagrant.configure(2) do |config|
       args: [
         "-p 80:80",
         "-e ENV_DOCKER_REGISTRY_HOST=#{REGISTRY_IP}",
-        "-e ENV_DOCKER_REGISTRY_PORT=5000"
-      ].join(" ")
+        "-e ENV_DOCKER_REGISTRY_PORT=5000",
+        "-v /usr/bin/dumb-init:/dumb-init:ro --entrypoint=/dumb-init"
+      ].join(" "),
+      cmd: "/root/start-apache.sh"
   end
 end
