@@ -31,7 +31,7 @@ Vagrant.configure(2) do |config|
     sh.inline = "sntp -4sSc pool.ntp.org; date"
   end
 
-  config.vm.provision :docker do |docker|
+  config.vm.provision "registry", type: "docker" do |docker|
     docker.run "registry",
       image: "registry:2",
       args: [
@@ -48,5 +48,15 @@ Vagrant.configure(2) do |config|
         --insecure-registry=#{REGISTRY_IP}:5000"' >> /var/lib/docker-root/profile
       /etc/init.d/docker restart
     EOT
+  end
+
+  config.vm.provision "frontend", type: "docker" do |docker|
+    docker.run "frontend",
+      image: "konradkleine/docker-registry-frontend:v2",
+      args: [
+        "-p 80:80",
+        "-e ENV_DOCKER_REGISTRY_HOST=#{REGISTRY_IP}",
+        "-e ENV_DOCKER_REGISTRY_PORT=5000"
+      ].join(" ")
   end
 end
