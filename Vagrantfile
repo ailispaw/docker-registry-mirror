@@ -15,6 +15,8 @@ Vagrant.configure(2) do |config|
 
   config.vm.box = "ailispaw/docker-root"
 
+  config.vm.network :forwarded_port, guest: 2375, host: 2375, auto_correct: true, disabled: true
+
   config.vm.network :private_network, ip: "#{REGISTRY_IP}"
 
   config.vm.synced_folder ".", "/vagrant", type: "nfs", mount_options: ["nolock", "vers=3", "udp"]
