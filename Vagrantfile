@@ -41,7 +41,8 @@ Vagrant.configure(2) do |config|
         "-p 5000:5000",
         "-v /vagrant/registry:/var/lib/registry",
         "-v /vagrant/config.yml:/etc/docker/registry/config.yml"
-      ].join(" ")
+      ].join(" "),
+      restart: false
   end
 
   config.vm.provision :shell do |sh|
@@ -51,6 +52,10 @@ Vagrant.configure(2) do |config|
         --insecure-registry=#{REGISTRY_IP}:5000"' >> /var/lib/docker-root/profile
       /etc/init.d/docker restart
     EOT
+  end
+
+  config.vm.provision :shell, run: "always" do |sh|
+    sh.inline = "docker start registry"
   end
 
   config.vm.provision "frontend", type: "docker" do |docker|
