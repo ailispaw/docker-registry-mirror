@@ -19,7 +19,8 @@ Vagrant.configure(2) do |config|
 
   config.vm.network :private_network, ip: "#{REGISTRY_IP}"
 
-  config.vm.synced_folder ".", "/vagrant", type: "nfs", mount_options: ["nolock", "vers=3", "udp"]
+  config.vm.synced_folder ".", "/vagrant", type: "nfs",
+    mount_options: ["nolock", "vers=3", "udp", "noatime", "actimeo=1"]
 
   if Vagrant.has_plugin?("vagrant-triggers") then
     config.trigger.after [:up, :resume] do
@@ -33,7 +34,23 @@ Vagrant.configure(2) do |config|
     sh.inline = "sntp -4sSc pool.ntp.org; date"
   end
 
-  config.vm.provision "registry", type: "docker" do |docker|
+  config.vm.provision :shell do |sh|
+    sh.inline = <<-EOT
+      echo 'DOCKER_EXTRA_ARGS="--userland-proxy=false \
+        --registry-mirror=http://#{REGISTRY_IP}:5000 \
+        --insecure-registry=#{REGISTRY_IP}:5000"' >> /var/lib/docker-root/profile
+      /etc/init.d/docker restart
+    EOT
+  end
+
+  config.vm.provision :shell, run: "always" do |sh|
+    sh.inline = <<-EOT
+      docker rm -f registry || true
+      docker rm -f frontend || true
+    EOT
+  end
+
+  config.vm.provision "registry", type: "docker", run: "always" do |docker|
     docker.pull_images "registry:2"
     docker.run "registry",
       image: "registry:2",
@@ -45,20 +62,7 @@ Vagrant.configure(2) do |config|
       restart: false
   end
 
-  config.vm.provision :shell do |sh|
-    sh.inline = <<-EOT
-      echo 'DOCKER_EXTRA_ARGS="--userland-proxy=false \
-        --registry-mirror=http://#{REGISTRY_IP}:5000 \
-        --insecure-registry=#{REGISTRY_IP}:5000"' >> /var/lib/docker-root/profile
-      /etc/init.d/docker restart
-    EOT
-  end
-
-  config.vm.provision :shell, run: "always" do |sh|
-    sh.inline = "docker start registry"
-  end
-
-  config.vm.provision "frontend", type: "docker" do |docker|
+  config.vm.provision "frontend", type: "docker", run: "always" do |docker|
     docker.pull_images "konradkleine/docker-registry-frontend:v2"
     docker.run "frontend",
       image: "konradkleine/docker-registry-frontend:v2",
@@ -68,6 +72,7 @@ Vagrant.configure(2) do |config|
         "-e ENV_DOCKER_REGISTRY_PORT=5000",
         "-v /usr/bin/dumb-init:/dumb-init:ro --entrypoint=/dumb-init"
       ].join(" "),
-      cmd: "/root/start-apache.sh"
+      cmd: "/root/start-apache.sh",
+      restart: false
   end
 end
