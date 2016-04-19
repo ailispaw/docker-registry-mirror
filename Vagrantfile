@@ -14,6 +14,7 @@ Vagrant.configure(2) do |config|
   config.vm.define "docker-registry"
 
   config.vm.box = "ailispaw/docker-root"
+  config.vm.box_version = ">= 1.3.9"
 
   config.vm.network :forwarded_port, guest: 2375, host: 2375, auto_correct: true, disabled: true
 
@@ -21,18 +22,6 @@ Vagrant.configure(2) do |config|
 
   config.vm.synced_folder ".", "/vagrant", type: "nfs",
     mount_options: ["nolock", "vers=3", "udp", "noatime", "actimeo=1"]
-
-  if Vagrant.has_plugin?("vagrant-triggers") then
-    config.trigger.after [:up, :resume] do
-      info "Adjusting datetime after suspend and resume."
-      run_remote "sudo sntp -4sSc pool.ntp.org; date"
-    end
-  end
-
-  # Adjusting datetime before provisioning.
-  config.vm.provision "timesync", type: "shell", run: "always" do |sh|
-    sh.inline = "sntp -4sSc pool.ntp.org; date"
-  end
 
   config.vm.provision :shell do |sh|
     sh.inline = <<-EOT
