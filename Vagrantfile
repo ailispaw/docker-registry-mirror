@@ -1,4 +1,4 @@
-# A dummy plugin for DockerRoot to set hostname and network correctly at the very first `vagrant up`
+# A dummy plugin for Barge to set hostname and network correctly at the very first `vagrant up`
 module VagrantPlugins
   module GuestLinux
     class Plugin < Vagrant.plugin("2")
@@ -13,8 +13,7 @@ REGISTRY_IP = "192.168.33.201"
 Vagrant.configure(2) do |config|
   config.vm.define "docker-registry"
 
-  config.vm.box = "ailispaw/docker-root"
-  config.vm.box_version = ">= 1.3.9"
+  config.vm.box = "ailispaw/barge"
 
   config.vm.network :forwarded_port, guest: 2375, host: 2375, auto_correct: true, disabled: true
 
@@ -27,7 +26,7 @@ Vagrant.configure(2) do |config|
     sh.inline = <<-EOT
       echo 'DOCKER_EXTRA_ARGS="--userland-proxy=false \
         --registry-mirror=http://#{REGISTRY_IP}:5000 \
-        --insecure-registry=#{REGISTRY_IP}:5000"' >> /var/lib/docker-root/profile
+        --insecure-registry=#{REGISTRY_IP}:5000"' >> /etc/default/docker
       /etc/init.d/docker restart
     EOT
   end

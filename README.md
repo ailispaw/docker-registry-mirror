@@ -17,7 +17,7 @@ Put the following code in your Vagrantfile.
 REGISTRY_IP = "192.168.33.201"
 
 Vagrant.configure(2) do |config|
-  config.vm.box = "ailispaw/docker-root"
+  config.vm.box = "ailispaw/barge"
 .
 .
 .
@@ -25,7 +25,7 @@ Vagrant.configure(2) do |config|
     sh.inline = <<-EOT
       echo 'DOCKER_EXTRA_ARGS="--userland-proxy=false \
         --registry-mirror=http://#{REGISTRY_IP}:5000 \
-        --insecure-registry=#{REGISTRY_IP}:5000"' >> /var/lib/docker-root/profile
+        --insecure-registry=#{REGISTRY_IP}:5000"' >> /etc/default/docker
       /etc/init.d/docker restart
     EOT
   end
